@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Flask User API Documentation</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="redoc-container"></div>
+    <script src="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"></script>
+    <script>
+      const spec = {"definitions": {}, "info": {"description": "Simple CRUD API for users", "title": "Flask User API", "version": "1.0.0"}, "paths": {"/users": {"get": {"responses": {"200": {"description": "List of users", "schema": {"items": {"properties": {"email": {"type": "string"}, "id": {"type": "integer"}, "name": {"type": "string"}}, "type": "object"}, "type": "array"}}}, "summary": "List all users", "tags": ["Users"]}, "post": {"parameters": [{"in": "body", "name": "body", "required": true, "schema": {"properties": {"email": {"example": "ankur@example.com", "type": "string"}, "name": {"example": "Ankur", "type": "string"}}, "required": ["name", "email"], "type": "object"}}], "responses": {"201": {"description": "User created", "schema": {"properties": {"email": {"type": "string"}, "id": {"example": 1710000000000, "type": "integer"}, "name": {"type": "string"}}, "type": "object"}}, "400": {"description": "Invalid request body", "schema": {"properties": {"message": {"type": "string"}}, "type": "object"}}}, "summary": "Create a user", "tags": ["Users"]}}, "/users/{user_id}": {"delete": {"parameters": [{"in": "path", "name": "user_id", "required": true, "type": "integer"}], "responses": {"200": {"description": "User deleted", "schema": {"properties": {"message": {"type": "string"}}, "type": "object"}}, "404": {"description": "User not found", "schema": {"properties": {"message": {"type": "string"}}, "type": "object"}}}, "summary": "Delete a user", "tags": ["Users"]}, "put": {"parameters": [{"in": "path", "name": "user_id", "required": true, "type": "integer"}, {"in": "body", "name": "body", "required": true, "schema": {"properties": {"email": {"example": "updated@example.com", "type": "string"}, "name": {"example": "Updated Name", "type": "string"}}, "type": "object"}}], "responses": {"200": {"description": "Updated user", "schema": {"properties": {"email": {"type": "string"}, "id": {"type": "integer"}, "name": {"type": "string"}}, "type": "object"}}, "404": {"description": "User not found", "schema": {"properties": {"message": {"type": "string"}}, "type": "object"}}}, "summary": "Update a user", "tags": ["Users"]}}}, "swagger": "2.0"};
+      Redoc.init(spec, {}, document.getElementById("redoc-container"));
+    </script>
+  </body>
+</html>
