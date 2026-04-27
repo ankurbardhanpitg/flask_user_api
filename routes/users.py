@@ -27,6 +27,41 @@ def write_users(users):
 
 @users_bp.route("/users", methods=["POST"])
 def add_user():
+    """
+    Create a user
+    ---
+    tags:
+      - Users
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required:
+            - name
+            - email
+          properties:
+            name:
+              type: string
+              example: Ankur
+            email:
+              type: string
+              example: ankur@example.com
+    responses:
+      201:
+        description: User created
+        schema:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 1710000000000
+            name:
+              type: string
+            email:
+              type: string
+    """
     data = request.json or {}
     users = read_users()
 
@@ -44,12 +79,69 @@ def add_user():
 
 @users_bp.route("/users", methods=["GET"])
 def get_users():
+    """
+    List all users
+    ---
+    tags:
+      - Users
+    responses:
+      200:
+        description: List of users
+        schema:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              name:
+                type: string
+              email:
+                type: string
+    """
     users = read_users()
     return jsonify(users)
 
 
 @users_bp.route("/users/<int:user_id>", methods=["PUT"])
 def update_user(user_id):
+    """
+    Update a user
+    ---
+    tags:
+      - Users
+    parameters:
+      - in: path
+        name: user_id
+        required: true
+        type: integer
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          properties:
+            name:
+              type: string
+              example: Updated Name
+            email:
+              type: string
+              example: updated@example.com
+    responses:
+      200:
+        description: Updated user
+        schema:
+          type: object
+          properties:
+            id:
+              type: integer
+            name:
+              type: string
+            email:
+              type: string
+      404:
+        description: User not found
+    """
     data = request.json or {}
     users = read_users()
 
@@ -65,6 +157,22 @@ def update_user(user_id):
 
 @users_bp.route("/users/<int:user_id>", methods=["DELETE"])
 def delete_user(user_id):
+    """
+    Delete a user
+    ---
+    tags:
+      - Users
+    parameters:
+      - in: path
+        name: user_id
+        required: true
+        type: integer
+    responses:
+      200:
+        description: User deleted
+      404:
+        description: User not found
+    """
     users = read_users()
 
     updated_users = [u for u in users if u["id"] != user_id]
