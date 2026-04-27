@@ -25,6 +25,15 @@ def write_users(users):
         json.dump(users, f, indent=4)
 
 
+def next_user_id(users):
+    numeric_ids = []
+    for user in users:
+        user_id = user.get("id")
+        if isinstance(user_id, (int, float)):
+            numeric_ids.append(int(user_id))
+    return (max(numeric_ids) + 1) if numeric_ids else int(datetime.now().timestamp() * 1000)
+
+
 @users_bp.route("/users", methods=["POST"])
 def add_user():
     """
@@ -61,14 +70,26 @@ def add_user():
               type: string
             email:
               type: string
+      400:
+        description: Invalid request body
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
     """
     data = request.json or {}
+    name = data.get("name")
+    email = data.get("email")
+    if not name or not email:
+        return jsonify({"message": "name and email are required"}), 400
+
     users = read_users()
 
     new_user = {
-        "id": int(datetime.now().timestamp() * 1000),
-        "name": data.get("name"),
-        "email": data.get("email"),
+        "id": next_user_id(users),
+        "name": name,
+        "email": email,
     }
 
     users.append(new_user)
@@ -141,6 +162,11 @@ def update_user(user_id):
               type: string
       404:
         description: User not found
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
     """
     data = request.json or {}
     users = read_users()
@@ -170,8 +196,18 @@ def delete_user(user_id):
     responses:
       200:
         description: User deleted
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
       404:
         description: User not found
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
     """
     users = read_users()
 
