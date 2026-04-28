@@ -167,8 +167,12 @@ def main() -> None:
                 story.append(
                     Paragraph(f"Api Name: {_safe_para(details['summary'])}", styles["Heading1"])
                 )
-            story.append(Paragraph(f"Api Path: {_safe_para(path)}", styles["Heading2"]))
-            story.append(Paragraph(f"Api Method: {_safe_para(method.upper())}", styles["Heading3"]))
+            story.append(
+                Paragraph(f"Api Path: {_safe_para(path)}", styles["Heading2"])
+            )
+            story.append(
+                Paragraph(f"Api Method: {_safe_para(method.upper())}", styles["Heading3"])
+            )
             if details.get("description"):
                 story.append(
                     Paragraph(
