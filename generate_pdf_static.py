@@ -3,6 +3,7 @@ from datetime import datetime
 from pathlib import Path
 
 from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
 
@@ -125,6 +126,9 @@ def main() -> None:
     output_file = output_dir / "api-docs.pdf"
 
     styles = getSampleStyleSheet()
+    styles["Heading1"].textColor = colors.red
+    styles["Heading2"].textColor = colors.blue
+    styles["Heading3"].textColor = colors.green
     body_style = styles["BodyText"]
     bullet_style = ParagraphStyle(
         "DocBullet",
@@ -148,10 +152,11 @@ def main() -> None:
     for path, operations in paths.items():
         story.append(Paragraph(_safe_para(path), styles["Heading1"]))
         for method, details in operations.items():
-            story.append(Paragraph(_safe_para(method.upper()), styles["Heading2"]))
+            story.append(Spacer(1, 6))
+            story.append(Paragraph(_safe_para(method.upper()), styles["Heading3"]))
             if details.get("summary"):
                 story.append(
-                    Paragraph(f"Summary: {_safe_para(details['summary'])}", body_style)
+                    Paragraph(f"Summary: {_safe_para(details['summary'])}", styles["Heading2"])
                 )
             if details.get("description"):
                 story.append(
@@ -190,7 +195,6 @@ def main() -> None:
                         for line in _example_lines(example_value, indent=1):
                             story.append(Paragraph(_safe_para(line), bullet_style))
                         story.append(Spacer(1, 6))
-
             responses = details.get("responses", {})
             if responses:
                 story.append(Paragraph("Responses:", styles["Heading3"]))
