@@ -6,6 +6,19 @@ from docx import Document
 from app import app
 
 
+def _resolve_schema(schema: dict, components: dict) -> dict:
+    if not schema:
+        return {}
+    ref = schema.get("$ref")
+    if not ref:
+        return schema
+    prefix = "#/components/schemas/"
+    if ref.startswith(prefix):
+        schema_name = ref[len(prefix) :]
+        return components.get("schemas", {}).get(schema_name, {})
+    return schema
+
+
 def _add_schema_lines(doc: Document, schema: dict, indent: int = 0) -> None:
     if not schema:
         return
@@ -38,13 +51,13 @@ def _format_parameter(param: dict) -> str:
     name = param.get("name", "unknown")
     where = param.get("in", "unknown")
     required = param.get("required", False)
-    param_type = param.get("type", "object")
+    param_type = param.get("schema", {}).get("type", "object")
     return f"{name} ({where}, type={param_type}, required={required})"
 
 
 def main() -> None:
     with app.test_client() as client:
-        response = client.get("/apispec_1.json")
+        response = client.get("/openapi.json")
         if response.status_code != 200:
             raise RuntimeError(
                 f"Failed to get OpenAPI spec. Status code: {response.status_code}"
@@ -60,6 +73,7 @@ def main() -> None:
     if info.get("description"):
         doc.add_paragraph(info["description"])
 
+    components = spec.get("components", {})
     paths = spec.get("paths", {})
     for path, operations in paths.items():
         doc.add_heading(path, level=1)
@@ -74,17 +88,19 @@ def main() -> None:
             if parameters:
                 doc.add_paragraph("Parameters:")
                 for param in parameters:
-                    if param.get("in") == "body":
-                        doc.add_paragraph(
-                            f"{param.get('name', 'body')} (body, required={param.get('required', False)})",
-                            style="List Bullet",
-                        )
-                        body_schema = param.get("schema", {})
-                        if body_schema:
-                            doc.add_paragraph("Request Body Schema:")
-                            _add_schema_lines(doc, body_schema, indent=1)
-                    else:
-                        doc.add_paragraph(_format_parameter(param), style="List Bullet")
+                    doc.add_paragraph(_format_parameter(param), style="List Bullet")
+
+            request_body = details.get("requestBody", {})
+            if request_body:
+                required = request_body.get("required", False)
+                doc.add_paragraph(f"Request Body (required={required}):")
+                media_types = request_body.get("content", {})
+                for media_type, media_meta in media_types.items():
+                    doc.add_paragraph(f"Media Type: {media_type}", style="List Bullet")
+                    body_schema = _resolve_schema(media_meta.get("schema", {}), components)
+                    if body_schema:
+                        doc.add_paragraph("Request Body Schema:")
+                        _add_schema_lines(doc, body_schema, indent=1)
 
             responses = details.get("responses", {})
             if responses:
@@ -94,10 +110,17 @@ def main() -> None:
                     doc.add_paragraph(
                         f"{status_code}: {description}", style="List Bullet"
                     )
-                    response_schema = response_meta.get("schema", {})
-                    if response_schema:
-                        doc.add_paragraph("Response Body Schema:")
-                        _add_schema_lines(doc, response_schema, indent=1)
+                    content = response_meta.get("content", {})
+                    for media_type, media_meta in content.items():
+                        doc.add_paragraph(
+                            f"Response Media Type: {media_type}", style="List Bullet"
+                        )
+                        response_schema = _resolve_schema(
+                            media_meta.get("schema", {}), components
+                        )
+                        if response_schema:
+                            doc.add_paragraph("Response Body Schema:")
+                            _add_schema_lines(doc, response_schema, indent=1)
 
     output_dir = Path("docs")
     output_dir.mkdir(parents=True, exist_ok=True)

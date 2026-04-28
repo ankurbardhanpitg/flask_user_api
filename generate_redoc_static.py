@@ -36,7 +36,7 @@ def main() -> None:
     output_file.parent.mkdir(parents=True, exist_ok=True)
 
     with app.test_client() as client:
-        response = client.get("/apispec_1.json")
+        response = client.get("/openapi.json")
         if response.status_code != 200:
             raise RuntimeError(
                 f"Failed to get OpenAPI spec. Status code: {response.status_code}"
