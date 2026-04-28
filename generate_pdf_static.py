@@ -136,6 +136,15 @@ def main() -> None:
         leftIndent=18,
         spaceAfter=3,
     )
+    example_style = ParagraphStyle(
+        "ExampleBlock",
+        parent=bullet_style,
+        backColor=colors.lightyellow,
+        leftIndent=24,
+        spaceBefore=2,
+        spaceAfter=2,
+        fontName="Courier",
+    )
 
     story = []
     info = spec.get("info", {})
@@ -150,14 +159,16 @@ def main() -> None:
     story.append(Spacer(1, 14))
 
     for path, operations in paths.items():
-        story.append(Paragraph(_safe_para(path), styles["Heading1"]))
+        
         for method, details in operations.items():
             story.append(Spacer(1, 6))
-            story.append(Paragraph(_safe_para(method.upper()), styles["Heading3"]))
+            
             if details.get("summary"):
                 story.append(
-                    Paragraph(f"Summary: {_safe_para(details['summary'])}", styles["Heading2"])
+                    Paragraph(f"Api Name: {_safe_para(details['summary'])}", styles["Heading1"])
                 )
+            story.append(Paragraph(f"Api Path: {_safe_para(path)}", styles["Heading2"]))
+            story.append(Paragraph(f"Api Method: {_safe_para(method.upper())}", styles["Heading3"]))
             if details.get("description"):
                 story.append(
                     Paragraph(
@@ -191,9 +202,9 @@ def main() -> None:
                         story.append(Paragraph(_safe_para(line), bullet_style))
                     example_value = _extract_example(media_meta, body_schema)
                     if example_value is not None:
-                        story.append(Paragraph(_safe_para("- Example:"), bullet_style))
+                        story.append(Paragraph(_safe_para("- Example:"), example_style))
                         for line in _example_lines(example_value, indent=1):
-                            story.append(Paragraph(_safe_para(line), bullet_style))
+                            story.append(Paragraph(_safe_para(line), example_style))
                         story.append(Spacer(1, 6))
             responses = details.get("responses", {})
             if responses:
@@ -221,9 +232,9 @@ def main() -> None:
                             story.append(Paragraph(_safe_para(line), bullet_style))
                         example_value = _extract_example(media_meta, response_schema)
                         if example_value is not None:
-                            story.append(Paragraph(_safe_para("- Example:"), bullet_style))
+                            story.append(Paragraph(_safe_para("- Example:"), example_style))
                             for line in _example_lines(example_value, indent=1):
-                                story.append(Paragraph(_safe_para(line), bullet_style))
+                                story.append(Paragraph(_safe_para(line), example_style))
                             story.append(Spacer(1, 6))
 
             story.append(Spacer(1, 8))
