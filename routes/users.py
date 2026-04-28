@@ -41,6 +41,14 @@ def add_user():
     ---
     tags:
       - Users
+    summary: Create a user
+    description: |
+      Creates a new user with the given `name` and `email`.
+
+      Returns the created user.
+
+      If the request body is invalid, returns a 400 error.
+      If the user already exists, returns a 400 error.
     parameters:
       - in: body
         name: body
@@ -68,8 +76,15 @@ def add_user():
               example: 1710000000000
             name:
               type: string
+              example: Ankur
             email:
               type: string
+              example: ankur@example.com
+        examples:
+          application/json:
+            id: 1710000000000
+            name: Ankur
+            email: ankur@example.com
       400:
         description: Invalid request body
         schema:
@@ -77,6 +92,9 @@ def add_user():
           properties:
             message:
               type: string
+        examples:
+          application/json:
+            message: name and email are required
     """
     data = request.json or {}
     name = data.get("name")
@@ -105,6 +123,11 @@ def get_users():
     ---
     tags:
       - Users
+    summary: List all users
+    description: |
+      Returns all users stored in the system.
+
+      Each user contains `id`, `name`, and `email`.
     responses:
       200:
         description: List of users
@@ -119,6 +142,14 @@ def get_users():
                 type: string
               email:
                 type: string
+        examples:
+          application/json:
+            - id: 1710000000000
+              name: Ankur
+              email: ankur@example.com
+            - id: 1710000000001
+              name: Priya
+              email: priya@example.com
     """
     users = read_users()
     return jsonify(users)
@@ -131,6 +162,13 @@ def update_user(user_id):
     ---
     tags:
       - Users
+    summary: Update a user
+    description: |
+      Updates the user with the given `id`.
+
+      Returns the updated user.
+
+      If the user is not found, returns a 404 error.
     parameters:
       - in: path
         name: user_id
@@ -160,6 +198,11 @@ def update_user(user_id):
               type: string
             email:
               type: string
+        examples:
+          application/json:
+            id: 1710000000000
+            name: Updated Name
+            email: updated@example.com
       404:
         description: User not found
         schema:
@@ -167,6 +210,9 @@ def update_user(user_id):
           properties:
             message:
               type: string
+        examples:
+          application/json:
+            message: User not found
     """
     data = request.json or {}
     users = read_users()
@@ -188,6 +234,13 @@ def delete_user(user_id):
     ---
     tags:
       - Users
+    summary: Delete a user
+    description: |
+      Deletes the user with the given `id`.
+
+      Returns a success message.
+
+      If the user is not found, returns a 404 error.
     parameters:
       - in: path
         name: user_id
@@ -201,6 +254,9 @@ def delete_user(user_id):
           properties:
             message:
               type: string
+        examples:
+          application/json:
+            message: User deleted
       404:
         description: User not found
         schema:
@@ -208,6 +264,9 @@ def delete_user(user_id):
           properties:
             message:
               type: string
+        examples:
+          application/json:
+            message: User not found
     """
     users = read_users()
 
