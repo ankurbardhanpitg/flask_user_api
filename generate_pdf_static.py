@@ -5,7 +5,7 @@ from pathlib import Path
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
-from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
+from reportlab.platypus import HRFlowable, Paragraph, SimpleDocTemplate, Spacer
 
 from app import app
 
@@ -161,6 +161,7 @@ def main() -> None:
     for path, operations in paths.items():
         
         for method, details in operations.items():
+            story.append(HRFlowable(width="100%", thickness=1, color=colors.red))
             story.append(Spacer(1, 6))
             
             if details.get("summary"):
@@ -242,6 +243,7 @@ def main() -> None:
                             story.append(Spacer(1, 6))
 
             story.append(Spacer(1, 8))
+        story.append(HRFlowable(width="100%", thickness=3, color=colors.grey))
         story.append(Spacer(1, 12))
 
     doc = SimpleDocTemplate(str(output_file), pagesize=A4)
