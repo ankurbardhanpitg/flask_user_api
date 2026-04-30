@@ -1,16 +1,45 @@
 from datetime import datetime
+from functools import wraps
 import json
 import os
 from pathlib import Path
 
 from flask import Blueprint, jsonify, request
 import jwt
+from jwt import ExpiredSignatureError, InvalidTokenError
 
 users_bp = Blueprint("users", __name__)
 
 DATA_FILE = Path(__file__).resolve().parent.parent / "users.json"
-JWT_SECRET = os.getenv("JWT_SECRET", "dev-secret-key")
+# JWT_SECRET = os.getenv("JWT_SECRET", "dev-secret-key")
+JWT_SECRET = "secret"
 JWT_ALGORITHM = "HS256"
+
+
+def token_required(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        auth_header = request.headers.get("Authorization", "")
+        print("auth_header", auth_header)
+        if not auth_header.startswith("Bearer "):
+            return jsonify({"message": "Missing or invalid Authorization header"}), 401
+
+        token = auth_header.split(" ", 1)[1].strip()
+        if not token:
+            return jsonify({"message": "Missing token"}), 401
+
+        try:
+            payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+            request.user = payload
+            print("request.user", request.user)
+        except ExpiredSignatureError:
+            return jsonify({"message": "Token expired"}), 401
+        except InvalidTokenError:
+            return jsonify({"message": "Invalid token"}), 401
+
+        return fn(*args, **kwargs)
+
+    return wrapper
 
 
 def read_users():
@@ -39,6 +68,7 @@ def next_user_id(users):
 
 
 @users_bp.route("/users", methods=["POST"])
+@token_required
 def add_user():
     data = request.json or {}
     name = data.get("name")
@@ -63,12 +93,14 @@ def add_user():
 
 
 @users_bp.route("/users", methods=["GET"])
+@token_required
 def get_users():
     users = read_users()
     return jsonify(users)
 
 
 @users_bp.route("/users/<int:user_id>", methods=["PUT"])
+@token_required
 def update_user(user_id):
     data = request.json or {}
     users = read_users()
@@ -85,6 +117,7 @@ def update_user(user_id):
 
 
 @users_bp.route("/users/<int:user_id>", methods=["DELETE"])
+@token_required
 def delete_user(user_id):
     users = read_users()
 
@@ -123,7 +156,7 @@ def login_user():
         "sub": str(matched_user.get("id")),
         "email": matched_user.get("email"),
         "iat": int(now.timestamp()),
-        "exp": int(now.timestamp()) + 3600,
+        "exp": int(now.timestamp()) + 3600000,
     }
     token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
 

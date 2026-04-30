@@ -13,6 +13,7 @@ OPENAPI_SPEC = {
                 "tags": ["Users"],
                 "summary": "List all users",
                 "description": "Returns all users stored in the system.",
+                "security": [{"BearerAuth": []}],
                 "responses": {
                     "200": {
                         "description": "List of users",
@@ -31,6 +32,7 @@ OPENAPI_SPEC = {
                 "tags": ["Users"],
                 "summary": "Create a user",
                 "description": "Creates a new user with the given name, email and password.",
+                "security": [{"BearerAuth": []}],
                 "requestBody": {
                     "required": True,
                     "content": {
@@ -64,6 +66,7 @@ OPENAPI_SPEC = {
                 "tags": ["Users"],
                 "summary": "Update a user",
                 "description": "Updates the user with the given id.",
+                "security": [{"BearerAuth": []}],
                 "parameters": [
                     {
                         "name": "user_id",
@@ -103,6 +106,7 @@ OPENAPI_SPEC = {
                 "tags": ["Users"],
                 "summary": "Delete a user",
                 "description": "Deletes the user with the given id.",
+                "security": [{"BearerAuth": []}],
                 "parameters": [
                     {
                         "name": "user_id",
@@ -174,6 +178,13 @@ OPENAPI_SPEC = {
         },
     },
     "components": {
+        "securitySchemes": {
+            "BearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT",
+            }
+        },
         "schemas": {
             "User": {
                 "type": "object",
