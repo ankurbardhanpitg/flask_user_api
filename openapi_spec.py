@@ -2,11 +2,12 @@ OPENAPI_SPEC = {
     "openapi": "3.0.3",
     "info": {
         "title": "Flask User API",
-        "description": "Simple CRUD API for users",
+        "description": "Simple CRUD API",
+        "domain": "http://127.0.0.1:5000",
         "version": "1.0.0",
     },
-    "servers": [{"url": "/"}],
-    "tags": [{"name": "Users"}],
+    "servers": [{"url": "http://127.0.0.1:5000"}],
+    "tags": [{"name": "Users"}, {"name": "Companies"}],
     "paths": {
         "/users": {
             "get": {
@@ -176,6 +177,133 @@ OPENAPI_SPEC = {
                 },
             }
         },
+        "/companies": {
+            "get": {
+                "tags": ["Companies"],
+                "summary": "List all companies",
+                "description": "Returns all companies stored in the system.",
+                "security": [{"BearerAuth": []}],
+                "responses": {
+                    "200": {
+                        "description": "List of companies",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {"$ref": "#/components/schemas/Company"},
+                                }
+                            }
+                        },
+                    }
+                },
+            },
+            "post": {
+                "tags": ["Companies"],
+                "summary": "Create a company",
+                "description": "Creates a new company with the given name and email.",
+                "security": [{"BearerAuth": []}],
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "schema": {"$ref": "#/components/schemas/CreateCompanyRequest"}
+                        }
+                    },
+                },
+                "responses": {
+                    "201": {
+                        "description": "Company created",
+                        "content": {
+                            "application/json": {
+                                "schema": {"$ref": "#/components/schemas/Company"}
+                            }
+                        },
+                    },
+                    "400": {
+                        "description": "Invalid request body",
+                        "content": {
+                            "application/json": {
+                                "schema": {"$ref": "#/components/schemas/MessageResponse"}
+                            }
+                        },
+                    },
+                },
+            },
+        },
+        "/companies/{company_id}": {
+            "put": {
+                "tags": ["Companies"],
+                "summary": "Update a company",
+                "description": "Updates the company with the given id.",
+                "security": [{"BearerAuth": []}],
+                "parameters": [
+                    {
+                        "name": "company_id",
+                        "in": "path",
+                        "required": True,
+                        "schema": {"type": "integer"},
+                    }
+                ],
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "schema": {"$ref": "#/components/schemas/UpdateCompanyRequest"}
+                        }
+                    },
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated company",
+                        "content": {
+                            "application/json": {
+                                "schema": {"$ref": "#/components/schemas/Company"}
+                            }
+                        },
+                    },
+                    "404": {
+                        "description": "Company not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {"$ref": "#/components/schemas/MessageResponse"}
+                            }
+                        },
+                    },
+                },
+            },
+            "delete": {
+                "tags": ["Companies"],
+                "summary": "Delete a company",
+                "description": "Deletes the company with the given id.",
+                "security": [{"BearerAuth": []}],
+                "parameters": [
+                    {
+                        "name": "company_id",
+                        "in": "path",
+                        "required": True,
+                        "schema": {"type": "integer"},
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Company deleted",
+                        "content": {
+                            "application/json": {
+                                "schema": {"$ref": "#/components/schemas/MessageResponse"}
+                            }
+                        },
+                    },
+                    "404": {
+                        "description": "Company not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {"$ref": "#/components/schemas/MessageResponse"}
+                            }
+                        },
+                    },
+                },
+            },
+        },
     },
     "components": {
         "securitySchemes": {
@@ -243,6 +371,30 @@ OPENAPI_SPEC = {
                     "token_type": {"type": "string", "example": "Bearer"},
                     "expires_in": {"type": "integer", "example": 3600},
                     "user": {"$ref": "#/components/schemas/LoginUser"},
+                },
+            },
+            "Company": {
+                "type": "object",
+                "required": ["id", "name", "email"],
+                "properties": {
+                    "id": {"type": "integer", "example": 1710000000001},
+                    "name": {"type": "string", "example": "Acme Pvt Ltd"},
+                    "email": {"type": "string", "example": "hello@acme.com"},
+                },
+            },
+            "CreateCompanyRequest": {
+                "type": "object",
+                "required": ["name", "email"],
+                "properties": {
+                    "name": {"type": "string", "example": "Acme Pvt Ltd"},
+                    "email": {"type": "string", "example": "hello@acme.com"},
+                },
+            },
+            "UpdateCompanyRequest": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "example": "Acme Updated"},
+                    "email": {"type": "string", "example": "updated@acme.com"},
                 },
             },
         }
