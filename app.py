@@ -1,9 +1,10 @@
 from flask import Flask, jsonify, render_template_string
 from openapi_spec import OPENAPI_SPEC
-from routes import users_bp
+from routes import companies_bp, users_bp
 
 app = Flask(__name__)
 app.register_blueprint(users_bp)
+app.register_blueprint(companies_bp)
 
 
 @app.get("/openapi.json")
