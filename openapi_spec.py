@@ -30,7 +30,7 @@ OPENAPI_SPEC = {
             "post": {
                 "tags": ["Users"],
                 "summary": "Create a user",
-                "description": "Creates a new user with the given name and email.",
+                "description": "Creates a new user with the given name, email and password.",
                 "requestBody": {
                     "required": True,
                     "content": {
@@ -136,19 +136,21 @@ OPENAPI_SPEC = {
         "schemas": {
             "User": {
                 "type": "object",
-                "required": ["id", "name", "email"],
+                "required": ["id", "name", "email", "password"],
                 "properties": {
                     "id": {"type": "integer", "example": 1710000000000},
                     "name": {"type": "string", "example": "Ankur"},
                     "email": {"type": "string", "example": "ankur@example.com"},
+                    "password": {"type": "string", "example": "secret@123"},
                 },
             },
             "CreateUserRequest": {
                 "type": "object",
-                "required": ["name", "email"],
+                "required": ["name", "email", "password"],
                 "properties": {
                     "name": {"type": "string", "example": "Ankur"},
                     "email": {"type": "string", "example": "ankur@example.com"},
+                    "password": {"type": "string", "example": "secret@123"},
                 },
             },
             "UpdateUserRequest": {
@@ -156,6 +158,7 @@ OPENAPI_SPEC = {
                 "properties": {
                     "name": {"type": "string", "example": "Updated Name"},
                     "email": {"type": "string", "example": "updated@example.com"},
+                    "password": {"type": "string", "example": "updated@123"},
                 },
             },
             "MessageResponse": {

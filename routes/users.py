@@ -39,8 +39,9 @@ def add_user():
     data = request.json or {}
     name = data.get("name")
     email = data.get("email")
-    if not name or not email:
-        return jsonify({"message": "name and email are required"}), 400
+    password = data.get("password")
+    if not name or not email or not password:
+        return jsonify({"message": "name, email and password are required"}), 400
 
     users = read_users()
 
@@ -48,6 +49,7 @@ def add_user():
         "id": next_user_id(users),
         "name": name,
         "email": email,
+        "password": password,
     }
 
     users.append(new_user)
@@ -71,6 +73,7 @@ def update_user(user_id):
         if user["id"] == user_id:
             user["name"] = data.get("name", user["name"])
             user["email"] = data.get("email", user["email"])
+            user["password"] = data.get("password", user.get("password", ""))
             write_users(users)
             return jsonify(user)
 
