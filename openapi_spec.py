@@ -2,10 +2,11 @@ OPENAPI_SPEC = {
     "openapi": "3.0.3",
     "info": {
         "title": "Flask User API",
-        "description": "Simple CRUD API for users",
+        "description": "Simple CRUD API",
+        "domain": "http://127.0.0.1:5000",
         "version": "1.0.0",
     },
-    "servers": [{"url": "/"}],
+    "servers": [{"url": "http://127.0.0.1:5000"}],
     "tags": [{"name": "Users"}],
     "paths": {
         "/users": {
