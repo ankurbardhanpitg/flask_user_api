@@ -1,12 +1,16 @@
 from datetime import datetime
 import json
+import os
 from pathlib import Path
 
 from flask import Blueprint, jsonify, request
+import jwt
 
 users_bp = Blueprint("users", __name__)
 
 DATA_FILE = Path(__file__).resolve().parent.parent / "users.json"
+JWT_SECRET = os.getenv("JWT_SECRET", "dev-secret-key")
+JWT_ALGORITHM = "HS256"
 
 
 def read_users():
@@ -91,3 +95,47 @@ def delete_user(user_id):
 
     write_users(updated_users)
     return jsonify({"message": "User deleted"})
+
+
+@users_bp.route("/login", methods=["POST"])
+def login_user():
+    data = request.json or {}
+    email = data.get("email")
+    password = data.get("password")
+    if not email or not password:
+        return jsonify({"message": "email and password are required"}), 400
+
+    users = read_users()
+    matched_user = next(
+        (
+            user
+            for user in users
+            if user.get("email") == email and user.get("password") == password
+        ),
+        None,
+    )
+    print(matched_user)
+    if not matched_user:
+        return jsonify({"message": "Invalid email or password"}), 401
+
+    now = datetime.utcnow()
+    payload = {
+        "sub": str(matched_user.get("id")),
+        "email": matched_user.get("email"),
+        "iat": int(now.timestamp()),
+        "exp": int(now.timestamp()) + 3600,
+    }
+    token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+    return jsonify(
+        {
+            "token": token,
+            "token_type": "Bearer",
+            "expires_in": 3600,
+            "user": {
+                "id": matched_user.get("id"),
+                "name": matched_user.get("name"),
+                "email": matched_user.get("email"),
+            },
+        }
+    )

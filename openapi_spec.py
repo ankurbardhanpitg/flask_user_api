@@ -131,6 +131,47 @@ OPENAPI_SPEC = {
                 },
             },
         },
+        "/login": {
+            "post": {
+                "tags": ["Users"],
+                "summary": "Login user",
+                "description": "Authenticates a user and returns a JWT token.",
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "schema": {"$ref": "#/components/schemas/LoginRequest"}
+                        }
+                    },
+                },
+                "responses": {
+                    "200": {
+                        "description": "Login successful",
+                        "content": {
+                            "application/json": {
+                                "schema": {"$ref": "#/components/schemas/LoginResponse"}
+                            }
+                        },
+                    },
+                    "400": {
+                        "description": "Invalid request body",
+                        "content": {
+                            "application/json": {
+                                "schema": {"$ref": "#/components/schemas/MessageResponse"}
+                            }
+                        },
+                    },
+                    "401": {
+                        "description": "Invalid credentials",
+                        "content": {
+                            "application/json": {
+                                "schema": {"$ref": "#/components/schemas/MessageResponse"}
+                            }
+                        },
+                    },
+                },
+            }
+        },
     },
     "components": {
         "schemas": {
@@ -165,6 +206,33 @@ OPENAPI_SPEC = {
                 "type": "object",
                 "required": ["message"],
                 "properties": {"message": {"type": "string", "example": "User not found"}},
+            },
+            "LoginRequest": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                    "email": {"type": "string", "example": "ankur@example.com"},
+                    "password": {"type": "string", "example": "secret@123"},
+                },
+            },
+            "LoginUser": {
+                "type": "object",
+                "required": ["id", "name", "email"],
+                "properties": {
+                    "id": {"type": "integer", "example": 1710000000000},
+                    "name": {"type": "string", "example": "Ankur"},
+                    "email": {"type": "string", "example": "ankur@example.com"},
+                },
+            },
+            "LoginResponse": {
+                "type": "object",
+                "required": ["token", "token_type", "expires_in", "user"],
+                "properties": {
+                    "token": {"type": "string", "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."},
+                    "token_type": {"type": "string", "example": "Bearer"},
+                    "expires_in": {"type": "integer", "example": 3600},
+                    "user": {"$ref": "#/components/schemas/LoginUser"},
+                },
             },
         }
     },
