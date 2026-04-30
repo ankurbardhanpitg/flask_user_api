@@ -5,22 +5,46 @@ from pathlib import Path
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
-from reportlab.platypus import HRFlowable, Paragraph, SimpleDocTemplate, Spacer
+from reportlab.platypus import HRFlowable, Paragraph, Preformatted, SimpleDocTemplate, Spacer
 
 from app import app
 
 
-def _resolve_schema(schema: dict, components: dict) -> dict:
+def _resolve_schema(schema: dict, components: dict, seen_refs: set[str] | None = None) -> dict:
     if not schema:
         return {}
+
+    if seen_refs is None:
+        seen_refs = set()
+
     ref = schema.get("$ref")
-    if not ref:
-        return schema
     prefix = "#/components/schemas/"
-    if ref.startswith(prefix):
+
+    if ref:
+        if ref in seen_refs:
+            return {}
+        if not ref.startswith(prefix):
+            return schema
+
+        seen_refs.add(ref)
         schema_name = ref[len(prefix) :]
-        return components.get("schemas", {}).get(schema_name, {})
-    return schema
+        resolved_ref_schema = components.get("schemas", {}).get(schema_name, {})
+        return _resolve_schema(resolved_ref_schema, components, seen_refs)
+
+    resolved = dict(schema)
+    schema_type = resolved.get("type")
+    if schema_type == "object":
+        properties = resolved.get("properties", {})
+        resolved["properties"] = {
+            prop_name: _resolve_schema(prop_schema, components, set(seen_refs))
+            for prop_name, prop_schema in properties.items()
+        }
+    elif schema_type == "array":
+        resolved["items"] = _resolve_schema(
+            resolved.get("items", {}), components, set(seen_refs)
+        )
+
+    return resolved
 
 
 def _schema_lines(schema: dict, indent: int = 0) -> list[str]:
@@ -63,6 +87,40 @@ def _safe_para(text: str) -> str:
     return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
+def _security_lines(
+    operation_security: list[dict] | None,
+    global_security: list[dict] | None,
+    components: dict,
+) -> list[str]:
+    security_requirements = (
+        operation_security if operation_security is not None else (global_security or [])
+    )
+    if not security_requirements:
+        return []
+
+    schemes = components.get("securitySchemes", {})
+    lines = []
+    for requirement in security_requirements:
+        if not isinstance(requirement, dict):
+            continue
+        for scheme_name, scopes in requirement.items():
+            scheme_meta = schemes.get(scheme_name, {})
+            scheme_type = scheme_meta.get("type", "unknown")
+            scheme = scheme_meta.get("scheme")
+            bearer_format = scheme_meta.get("bearerFormat")
+
+            line = f"- {scheme_name}: type={scheme_type}"
+            if scheme:
+                line += f", scheme={scheme}"
+            if bearer_format:
+                line += f", bearerFormat={bearer_format}"
+            if scopes:
+                line += f", scopes={scopes}"
+            lines.append(line)
+
+    return lines
+
+
 def _build_example_from_schema(schema: dict) -> object | None:
     if not schema:
         return None
@@ -102,12 +160,10 @@ def _extract_example(media_meta: dict, schema: dict) -> object | None:
     return _build_example_from_schema(schema)
 
 
-def _example_lines(example_value: object, indent: int = 1) -> list[str]:
+def _example_text(example_value: object) -> str:
     if example_value is None:
-        return []
-    prefix = "  " * indent
-    rendered = json.dumps(example_value, indent=2, ensure_ascii=True).splitlines()
-    return [f"{prefix}{line}" for line in rendered]
+        return ""
+    return json.dumps(example_value, indent=4, ensure_ascii=True)
 
 
 def main() -> None:
@@ -145,11 +201,19 @@ def main() -> None:
         spaceAfter=2,
         fontName="Courier",
     )
+    example_label_style = ParagraphStyle(
+        "ExampleLabel",
+        parent=bullet_style,
+        fontName="Helvetica-Bold",
+        spaceBefore=8,
+        spaceAfter=2,
+    )
 
     story = []
     info = spec.get("info", {})
     components = spec.get("components", {})
     paths = spec.get("paths", {})
+    global_security = spec.get("security")
 
     story.append(Paragraph(_safe_para(info.get("title", "API Documentation")), styles["Title"]))
     story.append(Spacer(1, 8))
@@ -161,7 +225,7 @@ def main() -> None:
     for path, operations in paths.items():
         
         for method, details in operations.items():
-            story.append(HRFlowable(width="100%", thickness=1, color=colors.red))
+            story.append(HRFlowable(width="100%", thickness=3, color=colors.grey))
             story.append(Spacer(1, 6))
             
             if details.get("summary"):
@@ -175,12 +239,21 @@ def main() -> None:
                 Paragraph(f"Api Method: {_safe_para(method.upper())}", styles["Heading3"])
             )
             if details.get("description"):
+                story.append(Paragraph("Description:", styles["Heading3"]))
                 story.append(
                     Paragraph(
-                        f"Description: {_safe_para(details['description'])}",
+                        _safe_para(details["description"]),
                         body_style,
                     )
                 )
+
+            security_lines = _security_lines(
+                details.get("security"), global_security, components
+            )
+            if security_lines:
+                story.append(Paragraph("Security:", styles["Heading3"]))
+                for line in security_lines:
+                    story.append(Paragraph(_safe_para(line), bullet_style))
 
             parameters = details.get("parameters", [])
             if parameters:
@@ -207,9 +280,12 @@ def main() -> None:
                         story.append(Paragraph(_safe_para(line), bullet_style))
                     example_value = _extract_example(media_meta, body_schema)
                     if example_value is not None:
-                        story.append(Paragraph(_safe_para("- Example:"), example_style))
-                        for line in _example_lines(example_value, indent=1):
-                            story.append(Paragraph(_safe_para(line), example_style))
+                        story.append(Paragraph(_safe_para("- Example:"), example_label_style))
+                        story.append(
+                            Preformatted(
+                                _safe_para(_example_text(example_value)), example_style
+                            )
+                        )
                         story.append(Spacer(1, 6))
             responses = details.get("responses", {})
             if responses:
@@ -237,13 +313,16 @@ def main() -> None:
                             story.append(Paragraph(_safe_para(line), bullet_style))
                         example_value = _extract_example(media_meta, response_schema)
                         if example_value is not None:
-                            story.append(Paragraph(_safe_para("- Example:"), example_style))
-                            for line in _example_lines(example_value, indent=1):
-                                story.append(Paragraph(_safe_para(line), example_style))
+                            story.append(Paragraph(_safe_para("- Example:"), example_label_style))
+                            story.append(
+                                Preformatted(
+                                    _safe_para(_example_text(example_value)), example_style
+                                )
+                            )
                             story.append(Spacer(1, 6))
 
             story.append(Spacer(1, 8))
-        story.append(HRFlowable(width="100%", thickness=3, color=colors.grey))
+        # story.append(HRFlowable(width="100%", thickness=3, color=colors.grey))
         story.append(Spacer(1, 12))
 
     doc = SimpleDocTemplate(str(output_file), pagesize=A4)

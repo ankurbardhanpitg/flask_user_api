@@ -1,11 +1,5 @@
 [
     {
-        "id": 1777290913789,
-        "name": "Ankurxxx",
-        "email": "ankurxxx@example.com",
-        "password": "secret@123"
-    },
-    {
         "id": 1777290913790,
         "name": "Ankur1",
         "email": "ankur1@example.com",
@@ -19,8 +13,8 @@
     },
     {
         "id": 1777290913792,
-        "name": "Ankur4",
-        "email": "ankur4@example.com",
+        "name": "Ankur5",
+        "email": "ankur5@example.com",
         "password": "secret@123"
     }
 ]
