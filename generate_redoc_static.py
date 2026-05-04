@@ -1,17 +1,19 @@
+import html
 import json
 from pathlib import Path
 
 from app import app
 
 
-def build_redoc_html(spec: dict) -> str:
+def build_redoc_html(spec: dict, page_title: str = "Flask User API Documentation") -> str:
     spec_json = json.dumps(spec, ensure_ascii=True)
+    safe_title = html.escape(page_title, quote=True)
     return f"""<!DOCTYPE html>
 <html>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Flask User API Documentation</title>
+    <title>{safe_title}</title>
     <style>
       body {{
         margin: 0;

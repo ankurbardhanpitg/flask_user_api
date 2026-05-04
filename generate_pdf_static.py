@@ -166,21 +166,8 @@ def _example_text(example_value: object) -> str:
     return json.dumps(example_value, indent=4, ensure_ascii=True)
 
 
-def main() -> None:
-    with app.test_client() as client:
-        response = client.get("/openapi.json")
-        if response.status_code != 200:
-            raise RuntimeError(
-                f"Failed to get OpenAPI spec. Status code: {response.status_code}"
-            )
-        spec = response.get_json()
-        if not spec:
-            raise RuntimeError("OpenAPI spec is empty or invalid JSON.")
-
-    output_dir = Path("docs")
-    output_dir.mkdir(parents=True, exist_ok=True)
-    output_file = output_dir / "api-docs.pdf"
-
+def build_openapi_pdf_story(spec: dict) -> list:
+    """Build ReportLab flowables for a static OpenAPI PDF from a spec dict."""
     styles = getSampleStyleSheet()
     styles["Heading1"].textColor = colors.red
     styles["Heading2"].textColor = colors.blue
@@ -209,7 +196,7 @@ def main() -> None:
         spaceAfter=2,
     )
 
-    story = []
+    story: list = []
     info = spec.get("info", {})
     components = spec.get("components", {})
     paths = spec.get("paths", {})
@@ -223,11 +210,10 @@ def main() -> None:
     story.append(Spacer(1, 14))
 
     for path, operations in paths.items():
-        
         for method, details in operations.items():
             story.append(HRFlowable(width="100%", thickness=3, color=colors.grey))
             story.append(Spacer(1, 6))
-            
+
             if details.get("summary"):
                 story.append(
                     Paragraph(f"Api Name: {_safe_para(details['summary'])}", styles["Heading1"])
@@ -322,19 +308,41 @@ def main() -> None:
                             story.append(Spacer(1, 6))
 
             story.append(Spacer(1, 8))
-        # story.append(HRFlowable(width="100%", thickness=3, color=colors.grey))
         story.append(Spacer(1, 12))
 
+    return story
+
+
+def write_openapi_pdf(story: list, output_file: Path) -> Path:
+    """Write flowables to PDF; on PermissionError, retry with a timestamped filename."""
+    output_file.parent.mkdir(parents=True, exist_ok=True)
     doc = SimpleDocTemplate(str(output_file), pagesize=A4)
     try:
         doc.build(story)
     except PermissionError:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_file = output_dir / f"api-docs-{timestamp}.pdf"
+        output_file = output_file.parent / f"{output_file.stem}-{timestamp}{output_file.suffix}"
         doc = SimpleDocTemplate(str(output_file), pagesize=A4)
         doc.build(story)
+    return output_file
 
-    print(f"Generated static PDF at: {output_file.resolve()}")
+
+def main() -> None:
+    with app.test_client() as client:
+        response = client.get("/openapi.json")
+        if response.status_code != 200:
+            raise RuntimeError(
+                f"Failed to get OpenAPI spec. Status code: {response.status_code}"
+            )
+        spec = response.get_json()
+        if not spec:
+            raise RuntimeError("OpenAPI spec is empty or invalid JSON.")
+
+    output_dir = Path("docs")
+    output_file = output_dir / "api-docs.pdf"
+    story = build_openapi_pdf_story(spec)
+    written = write_openapi_pdf(story, output_file)
+    print(f"Generated static PDF at: {written.resolve()}")
 
 
 if __name__ == "__main__":
