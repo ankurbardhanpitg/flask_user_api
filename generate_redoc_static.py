@@ -34,7 +34,7 @@ def build_redoc_html(spec: dict, page_title: str = "Flask User API Documentation
 
 
 def main() -> None:
-    output_file = Path("docs") / "redoc-static.html"
+    output_file = Path("docs") / "flask-user-api.html"
     output_file.parent.mkdir(parents=True, exist_ok=True)
 
     with app.test_client() as client:

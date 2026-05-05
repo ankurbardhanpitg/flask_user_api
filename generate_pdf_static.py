@@ -339,7 +339,7 @@ def main() -> None:
             raise RuntimeError("OpenAPI spec is empty or invalid JSON.")
 
     output_dir = Path("docs")
-    output_file = output_dir / "api-docs.pdf"
+    output_file = output_dir / "flask-user-api.pdf"
     story = build_openapi_pdf_story(spec)
     written = write_openapi_pdf(story, output_file)
     print(f"Generated static PDF at: {written.resolve()}")

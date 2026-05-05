@@ -35,6 +35,7 @@ def next_company_id(companies):
     return (max(numeric_ids) + 1) if numeric_ids else int(datetime.now().timestamp() * 1000)
 
 
+# POST /companies - Create a new company (requires name and email).
 @companies_bp.route("/companies", methods=["POST"])
 @token_required
 def add_company():
@@ -58,6 +59,7 @@ def add_company():
     return jsonify(new_company), 201
 
 
+# GET /companies - Return all companies.
 @companies_bp.route("/companies", methods=["GET"])
 @token_required
 def get_companies():
@@ -65,6 +67,7 @@ def get_companies():
     return jsonify(companies)
 
 
+# PUT /companies/<company_id> - Update an existing company by ID.
 @companies_bp.route("/companies/<int:company_id>", methods=["PUT"])
 @token_required
 def update_company(company_id):
@@ -81,6 +84,7 @@ def update_company(company_id):
     return jsonify({"message": "Company not found"}), 404
 
 
+# DELETE /companies/<company_id> - Delete a company by ID.
 @companies_bp.route("/companies/<int:company_id>", methods=["DELETE"])
 @token_required
 def delete_company(company_id):
