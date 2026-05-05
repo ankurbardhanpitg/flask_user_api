@@ -3,12 +3,7 @@ PAM_PROJECT_SPEC = {
     "info": {
         "title": "PAM Project API",
         "description": (
-            "OpenAPI description for the PAM web UI JSON gateway at `/SPF.Util` "
-            "(POST `https://<host>/SPF.Util`). Clients send JSON-RPC-style envelopes: "
-            "`method` is `callModule` (e.g. session follow-up with `uid`) or `callModuleEx` "
-            "(e.g. `auth.login` with `Credentials`). The browser may also send the "
-            "`pum_rest_auth` session cookie on some flows. Successful login returns "
-            "`status` 0 with `User`, `Identity`, and `AuthToken`."
+            "This is the API for the PAM Project. These apis are used to fetch the PAM Project and several essentials information which are needed to be displayed in the PAM Project."
         ),
         "version": "1.0.0",
     },
@@ -23,10 +18,7 @@ PAM_PROJECT_SPEC = {
                 "tags": ["SPF"],
                 "summary": "Login",
                 "description": (
-                    "Single JSON endpoint used by the PAM UI. `params.pkt` selects the "
-                    "backend `module` and `method`. Use `callModuleEx` with `Credentials` for "
-                    "password login (`auth.login`); use `callModule` with `uid` for other "
-                    "auth/session steps. `svc_name` is often null."
+                    "This api is used to login to the PAM Project. In the response, you will get the user information, identity, and auth token."
                 ),
                 "security": [{}, {"PumRestAuthCookie": []}],
                 "requestBody": {
@@ -181,7 +173,7 @@ PAM_PROJECT_SPEC = {
                 "tags": ["resource"],
                 "summary": "List vault resources",
                 "description": (
-                    "Returns privileged credential vault resources visible to the authenticated "
+                    "This api is used to fetch the list of resources "
                     "session. Requires the `pum_rest_auth` cookie."
                 ),
                 "security": [{"PumRestAuthCookie": []}],
