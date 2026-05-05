@@ -13,7 +13,10 @@ PAM_PROJECT_SPEC = {
         "version": "1.0.0",
     },
     "servers": [{"url": "https://192.168.1.209", "description": "PAM appliance (example)"}],
-    "tags": [{"name": "SPF", "description": "SPF.Util JSON-RPC-style module calls"}],
+    "tags": [
+        {"name": "SPF", "description": "SPF.Util JSON-RPC-style module calls"},
+        {"name": "resource", "description": "Privileged credential vault resource endpoints"},
+    ],
     "paths": {
         "/SPF.Util": {
             "post": {
@@ -172,7 +175,61 @@ PAM_PROJECT_SPEC = {
                     }
                 },
             }
-        }
+        },
+        "/rest/prvcrdvlt/Resources": {
+            "get": {
+                "tags": ["resource"],
+                "summary": "List vault resources",
+                "description": (
+                    "Returns privileged credential vault resources visible to the authenticated "
+                    "session. Requires the `pum_rest_auth` cookie."
+                ),
+                "security": [{"PumRestAuthCookie": []}],
+                "responses": {
+                    "200": {
+                        "description": "Resources returned successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {"$ref": "#/components/schemas/PrvcrdvltResourcesResponse"},
+                                "examples": {
+                                    "resourcesList": {
+                                        "summary": "Example resources payload",
+                                        "value": {
+                                            "vrm": "4.6.0",
+                                            "status": 200,
+                                            "message": "All the resources are returned successfully.",
+                                            "svc": "pam02.pitg.site",
+                                            "Vault": [
+                                                {
+                                                    "id": "a2808230-3c96-11f1-9377-2b26fe29c1ca",
+                                                    "name": "192.168.1.216",
+                                                    "type": "ssh",
+                                                    "path": 0,
+                                                    "profile": 101,
+                                                    "resource_profile_name": "SSH",
+                                                    "passwordManaged": 0,
+                                                    "enable_discovery": 0,
+                                                    "credentials": 1,
+                                                    "ACL": {"Role": {}},
+                                                }
+                                            ],
+                                        },
+                                    }
+                                },
+                            }
+                        },
+                    },
+                    "401": {
+                        "description": "Missing, expired, or invalid `pum_rest_auth` cookie.",
+                        "content": {
+                            "application/json": {
+                                "schema": {"$ref": "#/components/schemas/PrvcrdvltErrorResponse"}
+                            }
+                        },
+                    },
+                },
+            }
+        },
     },
     "components": {
         "securitySchemes": {
@@ -408,6 +465,72 @@ PAM_PROJECT_SPEC = {
                         "not": {"enum": [0]},
                         "description": "Non-zero when the call failed.",
                     },
+                },
+                "additionalProperties": True,
+            },
+            "PrvcrdvltResource": {
+                "type": "object",
+                "description": "Single resource entry from the privileged credential vault API.",
+                "required": [
+                    "id",
+                    "name",
+                    "type",
+                    "path",
+                    "profile",
+                    "resource_profile_name",
+                    "enable_discovery",
+                    "credentials",
+                    "ACL",
+                ],
+                "properties": {
+                    "id": {"type": "string"},
+                    "name": {"type": "string"},
+                    "type": {"type": "string", "description": "Resource type (e.g. ssh, windows, SSO, ldap, database)."},
+                    "path": {"type": "integer"},
+                    "profile": {"type": "integer"},
+                    "resource_profile_name": {"type": "string"},
+                    "passwordManaged": {"type": "integer", "description": "Password management flag when present."},
+                    "enable_discovery": {"type": "integer"},
+                    "credentials": {"type": "integer"},
+                    "domain": {"type": "string", "description": "Domain resource id when present (e.g. windows resource)."},
+                    "cred": {"type": "string", "description": "Credential id when present (e.g. ldap resource)."},
+                    "ACL": {"$ref": "#/components/schemas/PrvcrdvltAcl"},
+                },
+                "additionalProperties": True,
+            },
+            "PrvcrdvltAcl": {
+                "type": "object",
+                "properties": {
+                    "Role": {
+                        "type": "object",
+                        "description": "Role mapping object; may be empty in list responses.",
+                        "additionalProperties": True,
+                    }
+                },
+                "additionalProperties": True,
+            },
+            "PrvcrdvltResourcesResponse": {
+                "type": "object",
+                "required": ["vrm", "status", "message", "svc", "Vault"],
+                "properties": {
+                    "vrm": {"type": "string"},
+                    "message": {"type": "string"},
+                    "status": {"type": "integer", "enum": [200]},
+                    "svc": {"type": "string"},
+                    "Vault": {
+                        "type": "array",
+                        "items": {"$ref": "#/components/schemas/PrvcrdvltResource"},
+                    },
+                },
+                "additionalProperties": True,
+            },
+            "PrvcrdvltErrorResponse": {
+                "type": "object",
+                "required": ["status"],
+                "properties": {
+                    "vrm": {"type": "string"},
+                    "message": {"type": "string"},
+                    "status": {"type": "integer"},
                 },
                 "additionalProperties": True,
             },
