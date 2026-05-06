@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, render_template_string
+from flask import Flask, jsonify, render_template_string, send_from_directory
 from openapi_spec import OPENAPI_SPEC
 from pam_project.pam_project_spec import PAM_PROJECT_SPEC
 from routes import users_bp, companies_bp
@@ -6,6 +6,11 @@ from routes import users_bp, companies_bp
 app = Flask(__name__)
 app.register_blueprint(users_bp)
 app.register_blueprint(companies_bp)
+
+
+@app.get("/core_lib/<path:filename>")
+def core_lib_static(filename: str):
+    return send_from_directory("core_lib", filename)
 
 @app.get("/pam_project.json")
 def pam_project_json():
@@ -25,7 +30,7 @@ def pam_project_redoc():
           </head>
           <body>
             <redoc spec-url="/pam_project.json"></redoc>
-            <script src="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"></script>
+            <script src="/core_lib/redoc.standalone.js"></script>
           </body>
         </html>
         """
@@ -75,7 +80,7 @@ def redoc_docs():
           </head>
           <body>
             <redoc spec-url="/openapi.json"></redoc>
-            <script src="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"></script>
+            <script src="/core_lib/redoc.standalone.js"></script>
           </body>
         </html>
         """
