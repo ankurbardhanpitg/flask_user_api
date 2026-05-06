@@ -57,7 +57,7 @@ def add_company():
     write_companies(companies)
 
     return jsonify(new_company), 201
-
+# End of POST /companies - Create a new company (requires name and email).
 
 # GET /companies - Return all companies.
 @companies_bp.route("/companies", methods=["GET"])
@@ -66,6 +66,7 @@ def get_companies():
     companies = read_companies()
     return jsonify(companies)
 
+# End of GET /companies - Return all companies.
 
 # PUT /companies/<company_id> - Update an existing company by ID.
 @companies_bp.route("/companies/<int:company_id>", methods=["PUT"])
@@ -82,7 +83,7 @@ def update_company(company_id):
             return jsonify(company)
 
     return jsonify({"message": "Company not found"}), 404
-
+# End of PUT /companies/<company_id> - Update an existing company by ID.
 
 # DELETE /companies/<company_id> - Delete a company by ID.
 @companies_bp.route("/companies/<int:company_id>", methods=["DELETE"])
@@ -96,3 +97,4 @@ def delete_company(company_id):
 
     write_companies(updated_companies)
     return jsonify({"message": "Company deleted"})
+# End of DELETE /companies/<company_id> - Delete a company by ID.

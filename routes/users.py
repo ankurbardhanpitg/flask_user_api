@@ -36,6 +36,11 @@ def next_user_id(users):
     return (max(numeric_ids) + 1) if numeric_ids else int(datetime.now().timestamp() * 1000)
 
 
+# Create a new user.
+# - Route: POST /users
+# - Auth: Bearer token required
+# - Body: JSON { "name": str, "email": str, "password": str }
+# - Returns: 201 with created user JSON, or 400 on validation error
 @users_bp.route("/users", methods=["POST"])
 @token_required
 def add_user():
@@ -61,6 +66,10 @@ def add_user():
     return jsonify(new_user), 201
 
 
+# List all users.
+# - Route: GET /users
+# - Auth: Bearer token required
+# - Returns: 200 with an array of user objects
 @users_bp.route("/users", methods=["GET"])
 @token_required
 def get_users():
@@ -68,6 +77,11 @@ def get_users():
     return jsonify(users)
 
 
+# Update an existing user by id.
+# - Route: PUT /users/<user_id>
+# - Auth: Bearer token required
+# - Body: JSON with any of { "name": str, "email": str, "password": str }
+# - Returns: 200 with updated user JSON, or 404 if not found
 @users_bp.route("/users/<int:user_id>", methods=["PUT"])
 @token_required
 def update_user(user_id):
@@ -85,6 +99,10 @@ def update_user(user_id):
     return jsonify({"message": "User not found"}), 404
 
 
+# Delete a user by id.
+# - Route: DELETE /users/<user_id>
+# - Auth: Bearer token required
+# - Returns: 200 with confirmation message, or 404 if not found
 @users_bp.route("/users/<int:user_id>", methods=["DELETE"])
 @token_required
 def delete_user(user_id):
@@ -99,6 +117,11 @@ def delete_user(user_id):
     return jsonify({"message": "User deleted"})
 
 
+# Authenticate a user and return a JWT.
+# - Route: POST /login
+# - Auth: None
+# - Body: JSON { "email": str, "password": str }
+# - Returns: 200 with { token, token_type, expires_in, user }, or 401 if invalid
 @users_bp.route("/login", methods=["POST"])
 def login_user():
     data = request.json or {}
