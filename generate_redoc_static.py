@@ -8,6 +8,18 @@ from app import app
 def build_redoc_html(spec: dict, page_title: str = "Flask User API Documentation") -> str:
     spec_json = json.dumps(spec, ensure_ascii=True)
     safe_title = html.escape(page_title, quote=True)
+    redoc_bundle_path = Path("docs") / "redoc.standalone.js"
+    if not redoc_bundle_path.exists():
+        raise FileNotFoundError(
+            f"Missing ReDoc bundle at {redoc_bundle_path}. "
+            "Expected to inline this file into the generated HTML."
+        )
+
+    # Guard against the (rare) case that the bundle contains a literal </script>,
+    # which would prematurely terminate the script tag in HTML.
+    redoc_bundle = redoc_bundle_path.read_text(encoding="utf-8").replace(
+        "</script>", "<\\/script>"
+    )
     return f"""<!DOCTYPE html>
 <html>
   <head>
@@ -23,7 +35,9 @@ def build_redoc_html(spec: dict, page_title: str = "Flask User API Documentation
   </head>
   <body>
     <div id="redoc-container"></div>
-    <script src="./redoc.standalone.js"></script>
+    <script>
+{redoc_bundle}
+    </script>
     <script>
       const spec = {spec_json};
       Redoc.init(spec, {{}}, document.getElementById("redoc-container"));
@@ -34,7 +48,7 @@ def build_redoc_html(spec: dict, page_title: str = "Flask User API Documentation
 
 
 def main() -> None:
-    output_file = Path("docs") / "flask-user-api.html"
+    output_file = Path("docs") / "example-project-api.html"
     output_file.parent.mkdir(parents=True, exist_ok=True)
 
     with app.test_client() as client:
