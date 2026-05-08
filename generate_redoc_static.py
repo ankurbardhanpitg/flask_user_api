@@ -23,7 +23,7 @@ def build_redoc_html(spec: dict, page_title: str = "Flask User API Documentation
   </head>
   <body>
     <div id="redoc-container"></div>
-    <script src="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"></script>
+    <script src="./redoc.standalone.js"></script>
     <script>
       const spec = {spec_json};
       Redoc.init(spec, {{}}, document.getElementById("redoc-container"));
