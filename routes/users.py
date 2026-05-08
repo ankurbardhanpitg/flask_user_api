@@ -117,7 +117,7 @@ def delete_user(user_id):
     return jsonify({"message": "User deleted"})
 
 
-# Authenticate a user and return a JWT.
+# Start Authenticate a user and return a JWT.
 # - Route: POST /login
 # - Auth: None
 # - Body: JSON { "email": str, "password": str }
@@ -163,3 +163,4 @@ def login_user():
             },
         }
     )
+# End of Authenticate a user and return a JWT.
