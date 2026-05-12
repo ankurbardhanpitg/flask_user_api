@@ -4,22 +4,21 @@ from pathlib import Path
 
 from app import app
 
+# Default: load ReDoc from jsDelivr instead of embedding docs/redoc.standalone.js.
+DEFAULT_REDOC_SCRIPT_URL = (
+    "https://cdn.jsdelivr.net/npm/redoc@2.4.0/bundles/redoc.standalone.js"
+)
 
-def build_redoc_html(spec: dict, page_title: str = "Flask User API Documentation") -> str:
+
+def build_redoc_html(
+    spec: dict,
+    page_title: str = "Flask User API Documentation",
+    *,
+    redoc_script_url: str = DEFAULT_REDOC_SCRIPT_URL,
+) -> str:
     spec_json = json.dumps(spec, ensure_ascii=True)
     safe_title = html.escape(page_title, quote=True)
-    redoc_bundle_path = Path("docs") / "redoc.standalone.js"
-    if not redoc_bundle_path.exists():
-        raise FileNotFoundError(
-            f"Missing ReDoc bundle at {redoc_bundle_path}. "
-            "Expected to inline this file into the generated HTML."
-        )
-
-    # Guard against the (rare) case that the bundle contains a literal </script>,
-    # which would prematurely terminate the script tag in HTML.
-    redoc_bundle = redoc_bundle_path.read_text(encoding="utf-8").replace(
-        "</script>", "<\\/script>"
-    )
+    safe_redoc_src = html.escape(redoc_script_url, quote=True)
     return f"""<!DOCTYPE html>
 <html>
   <head>
@@ -35,9 +34,7 @@ def build_redoc_html(spec: dict, page_title: str = "Flask User API Documentation
   </head>
   <body>
     <div id="redoc-container"></div>
-    <script>
-{redoc_bundle}
-    </script>
+    <script src="{safe_redoc_src}" crossorigin></script>
     <script>
       const spec = {spec_json};
       Redoc.init(spec, {{}}, document.getElementById("redoc-container"));
